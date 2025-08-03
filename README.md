@@ -21,16 +21,14 @@ model-inference-with-FASTAPI/
 │   ├── setup.py               # W&B model download script
 │   ├── start.sh               # Backend startup script
 │   ├── requirements.txt       # Backend dependencies
-│   ├── docker/
-│   │   └── Dockerfile         # Backend Docker configuration
+│   ├── Dockerfile              # Backend Docker configuration
 │   ├── models/                # Downloaded models (auto-created)
 │   └── README.md              # Backend documentation
 ├── frontend/                   # Streamlit frontend service
 │   ├── app.py                 # Main Streamlit application
 │   ├── start.sh               # Frontend startup script
 │   ├── requirements.txt       # Frontend dependencies
-│   ├── docker/
-│   │   └── Dockerfile         # Frontend Docker configuration
+│   ├── Dockerfile              # Frontend Docker configuration
 │   └── README.md              # Frontend documentation
 ├── docker-compose.yml          # Docker orchestration
 └── README.md                  # This file (overview)
@@ -50,91 +48,6 @@ model-inference-with-FASTAPI/
    - Backend API: http://localhost:8000
    - API Documentation: http://localhost:8000/docs
 
-### Local Development
-
-#### Backend Setup
-```bash
-cd backend
-pip install -r requirements.txt
-python setup.py  # Download model from W&B
-python app.py    # Start FastAPI server
-```
-
-#### Frontend Setup
-```bash
-cd frontend
-pip install -r requirements.txt
-streamlit run app.py  # Start Streamlit app
-```
-
-## 🔧 Configuration
-
-### W&B Model Registry
-
-Update your W&B credentials in `backend/setup.py`:
-
-```python
-# Your W&B API key
-api_key = "your_wandb_api_key"
-
-# Your model artifact path
-artifact = api.artifact("username/project/model-name:latest")
-```
-
-### API Configuration
-
-For local development, update the API URL in `frontend/app.py`:
-
-```python
-API_BASE_URL = "http://localhost:8000"  # For local development
-```
-
-## 📊 API Endpoints
-
-### Health Check
-- **GET** `/health` - Check API status
-
-### Single Prediction
-- **POST** `/predict`
-  ```json
-  {
-    "text": "I love this movie!"
-  }
-  ```
-
-### Batch Prediction
-- **POST** `/batch_predict`
-  ```json
-  ["Text 1", "Text 2", "Text 3"]
-  ```
-
-## 🎯 Usage Examples
-
-### Single Text Analysis
-```python
-import requests
-
-response = requests.post(
-    "http://localhost:8000/predict",
-    json={"text": "This movie is amazing!"}
-)
-print(response.json())
-```
-
-### Batch Analysis
-```python
-texts = [
-    "I love this product!",
-    "This is terrible.",
-    "It's okay, nothing special."
-]
-
-response = requests.post(
-    "http://localhost:8000/batch_predict",
-    json=texts
-)
-print(response.json())
-```
 
 ## 🐳 Docker Commands
 
@@ -170,24 +83,8 @@ docker-compose build frontend
 2. **Batch Processing**: Upload text files or paste multiple texts
 3. **Example Gallery**: Pre-loaded examples to test the model
 4. **Real-time Status**: API health monitoring
-5. **Beautiful UI**: Clean, responsive design with progress indicators
+5. **Responsive UI**: Clean, responsive design with progress indicators
 
-## 🚨 Troubleshooting
-
-### Model Loading Issues
-- Ensure W&B credentials are correct in `backend/setup.py`
-- Check if the model artifact exists in your W&B registry
-- Verify the fallback model path is accessible
-
-### API Connection Issues
-- Make sure the backend is running on port 8000
-- Check firewall settings
-- Verify Docker containers are healthy: `docker-compose ps`
-
-### Docker Issues
-- Ensure Docker and Docker Compose are installed
-- Check available disk space for model download
-- Verify ports 8000 and 8501 are not in use
 
 ## 📋 Architecture
 
@@ -205,31 +102,3 @@ docker-compose build frontend
                                     └─────────────────┘
 ```
 
-## 🔒 Security Considerations
-
-- Store W&B API keys in environment variables for production
-- Configure specific CORS origins instead of "*" in production
-- Implement rate limiting for production use
-- Use HTTPS in production environments
-
-## 📝 Documentation
-
-- **Backend Details**: See `backend/README.md`
-- **Frontend Details**: See `frontend/README.md`
-- **API Documentation**: Available at http://localhost:8000/docs when running
-
-## 📝 License
-
-This project is licensed under the MIT License.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## 📧 Support
-
-For issues and questions, please open an issue in the GitHub repository.
