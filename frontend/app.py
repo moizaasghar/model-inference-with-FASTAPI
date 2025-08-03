@@ -3,6 +3,12 @@ import requests
 import json
 import time
 from typing import Dict, Any
+import os
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
 
 # Configure the page
 st.set_page_config(
@@ -13,8 +19,7 @@ st.set_page_config(
 )
 
 # API Configuration
-API_BASE_URL = "http://backend:8000"  # Docker service name
-# For local development, use: API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 def check_api_health() -> bool:
     """Check if the API is healthy"""
