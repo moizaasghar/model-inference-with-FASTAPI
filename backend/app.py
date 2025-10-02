@@ -1,27 +1,24 @@
 from importlib import reload
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
+from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 import logging
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 
-# Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Sentiment Analysis API", version="1.0.0")
+app = FastAPI(title="Sentiment Analysis API", version="1.0")
 
-# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your frontend URL
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Global variables for model and tokenizer
 classifier = None
 model_info = {}
 
@@ -29,93 +26,85 @@ class TextInput(BaseModel):
     text: str
 
 class PredictionResponse(BaseModel):
-    text: str
-    label: str
-    score: float
-    confidence_percentage: float
+        text: str
+        label: str
+        score: float
+        confidence_percentage: float
+
 
 def load_model():
-    """Load the sentiment analysis model"""
     global classifier, model_info
-    
     try:
-        # First, try to load from downloaded W&B model
-        model_path = "model"  # W&B downloaded model
+        model_path = "model"
+
+        if not Path(model_path).exists():
+            raise FileNotFoundError(f"Model directory '{model_path}' does not exist.")
         
-        if not model_path:
-            raise FileNotFoundError("Model not found in any expected location")
-        
-        # Load model and tokenizer
         model = AutoModelForSequenceClassification.from_pretrained(model_path, num_labels=2)
         tokenizer = AutoTokenizer.from_pretrained(model_path)
-        
-        # Create pipeline
+
         classifier = pipeline("text-classification", model=model, tokenizer=tokenizer)
-        
-        # Store model info
+
         model_info = {
             "model_path": model_path,
             "num_labels": 2,
             "labels": ["Negative", "Positive"]
         }
-        
-        logger.info("Model loaded successfully!")
+
+        logger.info(f"Model loaded successfully from {model_path}")
         return True
-        
+    
     except Exception as e:
         logger.error(f"Error loading model: {e}")
         return False
 
 @app.on_event("startup")
 async def startup_event():
-    """Load model on startup"""
     success = load_model()
     if not success:
-        logger.error("Failed to load model on startup")
+        logger.error("Failed to load model on startup.")
+    else:
+        logger.info("Model loaded and ready for predictions.")
 
 @app.get("/")
 async def root():
-    """Health check endpoint"""
     return {
-        "message": "Sentiment Analysis API is running!",
-        "model_loaded": classifier is not None,
-        "model_info": model_info
+        "message": "Sentiment Analysis API is running.",
+        "model_info": model_info,
+        "model_loaded": classifier is not None
     }
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
     if classifier is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
     return {"status": "healthy", "model_loaded": True}
 
 @app.post("/predict", response_model=PredictionResponse)
-async def predict_sentiment(input_data: TextInput):
-    """Predict sentiment for given text"""
+async def predict(input: TextInput):
     if classifier is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
-    
     try:
-        # Get prediction
-        result = classifier(input_data.text)
-        
-        # Extract result (pipeline returns a list with one dict)
-        prediction = result[0]
-        label = prediction['label']
-        score = prediction['score']
+        result = classifier(input.text)
+
+        if not result:
+            raise HTTPException(status_code=500, detail="Prediction failed")
+
+        # Extract relevant information from the result
+        label = result[0]['label']
+        score = result[0]['score']
         confidence_percentage = round(score * 100, 2)
-        
+
         return PredictionResponse(
-            text=input_data.text,
+            text=input.text,
             label=label,
             score=score,
             confidence_percentage=confidence_percentage
         )
-        
     except Exception as e:
-        logger.error(f"Error during prediction: {e}")
-        raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
+        logger.error(f"Prediction error: {e}")
+        raise HTTPException(status_code=500, detail="Prediction error")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("app:app", reload=True)

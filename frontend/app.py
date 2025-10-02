@@ -25,6 +25,7 @@ def check_api_health() -> bool:
     """Check if the API is healthy"""
     try:
         response = requests.get(f"{API_BASE_URL}/health", timeout=5)
+        # http://localhost:8000/health
         return response.status_code == 200
     except:
         return False
@@ -34,7 +35,7 @@ def predict_sentiment(text: str) -> Dict[str, Any]:
     try:
         payload = {"text": text}
         response = requests.post(
-            f"{API_BASE_URL}/predict", 
+            f"{API_BASE_URL}/predict", # http://localhost:8000/predict
             json=payload, 
             timeout=10
         )
