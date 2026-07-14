@@ -13,7 +13,7 @@ app = FastAPI(title="Sentiment Analysis API", version="1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"], # * allows all origins, you can specify your frontend URL here
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -66,7 +66,7 @@ async def startup_event():
     else:
         logger.info("Model loaded and ready for predictions.")
 
-@app.get("/")
+@app.get("/") # http://127.0.0.1:8000/
 async def root():
     return {
         "message": "Sentiment Analysis API is running.",
@@ -74,7 +74,7 @@ async def root():
         "model_loaded": classifier is not None
     }
 
-@app.get("/health")
+@app.get("/health") # http://127.0.0.1:8000/health
 async def health_check():
     if classifier is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
@@ -107,4 +107,4 @@ async def predict(input: TextInput):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app:app", reload=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)

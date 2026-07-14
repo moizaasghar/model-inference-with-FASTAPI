@@ -16,10 +16,10 @@ def download_model_from_wandb():
     models_dir.mkdir(exist_ok=True)
 
     try: 
-        model_name = os.getenv("MODEL_NAME")
-        version = os.getenv("VERSION")
+        model_name = os.getenv("MODEL_NAME") #moizasghar-afiniti-org/wandb-registry-latest-sentiment-model/bert-tiny
+        version = os.getenv("VERSION") # v0
         
-        model_uri = f"{model_name}:{version}"
+        model_uri = f"{model_name}:{version}" # moizasghar-afiniti-org/wandb-registry-latest-sentiment-model/bert-tiny:v0
         print(model_uri)
 
         model_artifact = api.artifact(model_uri)
