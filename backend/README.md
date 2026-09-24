@@ -6,7 +6,8 @@ This is the backend service that serves the BERT sentiment analysis model via a 
 
 - **FastAPI Framework**: High-performance, easy-to-use web framework
 - **BERT Model Integration**: Fine-tuned BERT model for sentiment analysis
-- **W&B Model Loading**: Automatic model download from Weights & Biases registry
+- **W&B Model Loading**: Downloads the model from the Weights & Biases registry on startup
+- **Hot Model Updates**: Polls the registry alias and swaps in new versions without a restart
 - **RESTful API**: Clean endpoints for single and batch predictions
 - **Docker Support**: Containerized deployment ready
 - **Health Monitoring**: Built-in health check endpoints
@@ -17,11 +18,9 @@ This is the backend service that serves the BERT sentiment analysis model via a 
 ```
 backend/
 ├── app.py                  # Main FastAPI application
-├── setup.py               # W&B model download script
-├── start.sh               # Startup script (Docker entrypoint)
 ├── requirements.txt       # Python dependencies
 ├── Dockerfile              # Docker configuration
-├── models/                # Downloaded models (created automatically)
+├── model/                 # Downloaded model versions, e.g. model/v3 (created automatically)
 └── README.md             # This file
 ```
 
@@ -34,16 +33,9 @@ backend/
    pip install -r requirements.txt
    ```
 
-2. **Download model from W&B:**
-   ```bash
-   python setup.py
-   ```
-
-3. **Start the server:**
+2. **Start the server** (downloads the model from W&B on startup):
    ```bash
    python app.py
-   # Or use the startup script
-   ./start.sh
    ```
 
 ### Docker Deployment
@@ -72,22 +64,17 @@ docker run -p 8000:8000 sentiment-backend
 
 ## 🔧 Configuration
 
-### W&B Settings
-Update your W&B credentials in `setup.py`:
+Set these in `.env` (or as environment variables):
 
-```python
-# Your W&B API key
-api_key = "your_wandb_api_key"
+| Variable | Description |
+|---|---|
+| `WANDB_API_KEY` | Your W&B API key |
+| `MODEL_NAME` | Registry path, e.g. `org/wandb-registry-model/bert-tiny` |
+| `VERSION` | Alias or version to serve. Use an alias (`latest`, `production`) to get automatic updates; a fixed version like `v0` never changes |
+| `POLL_INTERVAL_SECONDS` | How often to check the alias for a new version (default `60`, `0` disables) |
 
-# Your model artifact path
-artifact = api.artifact("username/project/model-name:latest")
-```
-
-### Model Paths
-The application tries to load models from these locations (in order):
-1. `models/bert-tiny-imdb` (downloaded from W&B)
-2. `models/artifacts/bert-tiny-sentiment-model:v0/bert-tiny-imdb`
-3. Fallback local path (configurable in setup.py)
+### Automatic model updates
+Every `POLL_INTERVAL_SECONDS`, the app checks which version the alias points to. If the digest changed, it downloads the new version to `model/<version>`, loads it, and swaps it in without a restart. The old version's files are deleted. `GET /` shows the version currently being served.
 
 ## 📝 Usage Examples
 

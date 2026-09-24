@@ -18,11 +18,9 @@ A complete sentiment analysis application using a fine-tuned BERT model, served 
 model-inference-with-FASTAPI/
 ├── backend/                    # FastAPI backend service
 │   ├── app.py                 # Main FastAPI application
-│   ├── setup.py               # W&B model download script
-│   ├── start.sh               # Backend startup script
 │   ├── requirements.txt       # Backend dependencies
 │   ├── Dockerfile              # Backend Docker configuration
-│   ├── models/                # Downloaded models (auto-created)
+│   ├── model/                 # Downloaded model versions (auto-created)
 │   └── README.md              # Backend documentation
 ├── frontend/                   # Streamlit frontend service
 │   ├── app.py                 # Main Streamlit application
