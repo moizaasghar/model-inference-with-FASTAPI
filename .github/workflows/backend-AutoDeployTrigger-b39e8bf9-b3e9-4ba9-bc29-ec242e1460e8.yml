@@ -1,0 +1,45 @@
+name: Trigger auto deployment for backend
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ main ]
+    paths:
+    - '**'
+    - '.github/workflows/backend-AutoDeployTrigger-b39e8bf9-b3e9-4ba9-bc29-ec242e1460e8.yml'
+
+  # Allow manual trigger 
+  workflow_dispatch:
+      
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.BACKEND_AZURE_CREDENTIALS }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          appSourcePath: ${{ github.workspace }}/backend
+          _dockerfilePathKey_: _dockerfilePath_
+          _targetLabelKey_: _targetLabel_
+          registryUrl: sentimentdemomoiz.azurecr.io
+          registryUsername: ${{ secrets.BACKEND_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.BACKEND_REGISTRY_PASSWORD }}
+          containerAppName: backend
+          resourceGroup: moeezsession
+          imageToBuild: sentimentdemomoiz.azurecr.io/backend:${{ github.sha }}
+          
+            
+
+     
+
